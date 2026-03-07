@@ -1,0 +1,164 @@
+name: Unity Android CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Unity Android APK and AAB
+    runs-on: ubuntu-latest
+
+    env:
+      UNITY_VERSION: 2022.3.20f1
+      BUILD_DIR: Builds/Android
+      PROJECT_PATH: unity-project
+      APK_NAME: wrp-android.apk
+      AAB_NAME: wrp-android.aab
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-${{ runner.os }}-
+
+      - name: Decode Android keystore
+        shell: bash
+        run: |
+          mkdir -p .github/secrets
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > .github/secrets/android.keystore
+
+      - name: Build APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: Android
+          androidExportType: androidPackage
+          androidKeystoreName: .github/secrets/android.keystore
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
+          buildsPath: ${{ env.BUILD_DIR }}/APK
+          customParameters: -batchmode -nographics
+
+      - name: Rename APK output
+        shell: bash
+        run: |
+          mkdir -p "${BUILD_DIR}/APK"
+          APK_FILE=$(find "${BUILD_DIR}/APK" -type f -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "APK file not found"
+            exit 1
+          fi
+          mv "$APK_FILE" "${BUILD_DIR}/APK/${APK_NAME}"
+
+      - name: Build AAB
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: Android
+          androidExportType: androidAppBundle
+          androidKeystoreName: .github/secrets/android.keystore
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
+          buildsPath: ${{ env.BUILD_DIR }}/AAB
+          customParameters: -batchmode -nographics
+
+      - name: Rename AAB output
+        shell: bash
+        run: |
+          mkdir -p "${BUILD_DIR}/AAB"
+          AAB_FILE=$(find "${BUILD_DIR}/AAB" -type f -name "*.aab" | head -n 1)
+          if [ -z "$AAB_FILE" ]; then
+            echo "AAB file not found"
+            exit 1
+          fi
+          mv "$AAB_FILE" "${BUILD_DIR}/AAB/${AAB_NAME}"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ env.BUILD_DIR }}/APK/${{ env.APK_NAME }}
+          if-no-files-found: error
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: ${{ env.BUILD_DIR }}/AAB/${{ env.AAB_NAME }}
+          if-no-files-found: error
+
+      - name: Send Slack notification
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          SHORT_SHA=$(echo "$COMMIT" | cut -c1-7)
+
+          payload=$(cat <<EOF
+          {
+            "text": "Unity Android build succeeded",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Unity Android Build Successful*"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Repository:*\n$REPO"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Branch:*\n$BRANCH"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Commit:*\n$SHORT_SHA"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Artifacts / Run:*\n$RUN_URL"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -X POST -H "Content-type: application/json" \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
+
+      - name: Cleanup keystore
+        if: always()
+        shell: bash
+        run: |
+          rm -f .github/secrets/android.keystore
