@@ -1,0 +1,15 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Ll]ogs/
+UserSettings/
+*.apk
+*.unitypackage
+
+# IDE
+.vscode/
+*.sln
+*.csproj
+
+# macOS
+.DS_Store
