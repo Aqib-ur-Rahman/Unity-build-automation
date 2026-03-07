@@ -25,16 +25,15 @@ jobs:
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-Android-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-Android-${{ runner.os }}-${{ hashFiles(format('{0}/Assets/**', env.PROJECT_PATH), format('{0}/Packages/**', env.PROJECT_PATH), format('{0}/ProjectSettings/**', env.PROJECT_PATH)) }}
           restore-keys: |
             Library-Android-${{ runner.os }}-
 
       - name: Decode Android keystore
         shell: bash
         run: |
-          mkdir -p .github/secrets
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > .github/secrets/android.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > "${{ runner.temp }}/android.keystore"
 
       - name: Build APK
         uses: game-ci/unity-builder@v4
@@ -45,7 +44,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
           androidExportType: androidPackage
-          androidKeystoreName: .github/secrets/android.keystore
+          androidKeystoreName: ${{ runner.temp }}/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
@@ -72,7 +71,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
           androidExportType: androidAppBundle
-          androidKeystoreName: .github/secrets/android.keystore
+          androidKeystoreName: ${{ runner.temp }}/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
@@ -161,4 +160,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          rm -f .github/secrets/android.keystore
+          rm -f "${{ runner.temp }}/android.keystore"
