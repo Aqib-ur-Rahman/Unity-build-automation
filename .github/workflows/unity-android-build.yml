@@ -15,8 +15,6 @@ jobs:
       UNITY_VERSION: 2022.3.20f1
       BUILD_DIR: Builds/Android
       PROJECT_PATH: unity-project
-      APK_NAME: wrp-android.apk
-      AAB_NAME: wrp-android.aab
 
     steps:
       - name: Checkout repository
@@ -34,7 +32,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore"
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
+          printf '%s' "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
 
       - name: Build APK
         uses: game-ci/unity-builder@v4
@@ -54,17 +52,6 @@ jobs:
           buildsPath: ${{ env.BUILD_DIR }}/APK
           customParameters: -nographics
 
-      - name: Rename APK output
-        shell: bash
-        run: |
-          mkdir -p "${BUILD_DIR}/APK"
-          APK_FILE=$(find "${BUILD_DIR}/APK" -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "APK file not found"
-            exit 1
-          fi
-          mv "$APK_FILE" "${BUILD_DIR}/APK/${APK_NAME}"
-
       - name: Build AAB
         uses: game-ci/unity-builder@v4
         env:
@@ -83,29 +70,18 @@ jobs:
           buildsPath: ${{ env.BUILD_DIR }}/AAB
           customParameters: -nographics
 
-      - name: Rename AAB output
-        shell: bash
-        run: |
-          mkdir -p "${BUILD_DIR}/AAB"
-          AAB_FILE=$(find "${BUILD_DIR}/AAB" -type f -name "*.aab" | head -n 1)
-          if [ -z "$AAB_FILE" ]; then
-            echo "AAB file not found"
-            exit 1
-          fi
-          mv "$AAB_FILE" "${BUILD_DIR}/AAB/${AAB_NAME}"
-
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: ${{ env.BUILD_DIR }}/APK/${{ env.APK_NAME }}
+          path: ${{ env.BUILD_DIR }}/APK/**/*.apk
           if-no-files-found: error
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-aab
-          path: ${{ env.BUILD_DIR }}/AAB/${{ env.AAB_NAME }}
+          path: ${{ env.BUILD_DIR }}/AAB/**/*.aab
           if-no-files-found: error
 
       - name: Send Slack notification
