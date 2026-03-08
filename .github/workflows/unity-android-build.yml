@@ -143,4 +143,8 @@ jobs:
         if: always()
         shell: bash
         run: |
+<<<<<<< HEAD
           rm -f "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
+=======
+          rm -f "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
+>>>>>>> 7e44b09 (Add real Unity project for CI pipeline)

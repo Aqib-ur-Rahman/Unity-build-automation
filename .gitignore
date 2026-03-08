@@ -13,8 +13,12 @@ UserSettings/
 
 # macOS
 .DS_Store
+<<<<<<< HEAD
 unity-project/UserSettings/ci-keystore/
 Builds/
 unity-project/ProjectSettings/BurstAotSettings_Android.json
 unity-project/ProjectSettings/CommonBurstAotSettings.json
 unity-project/UserSettings/ci-keystore/
+=======
+unity-project/unity-project_BurstDebugInformation_DoNotShip/
+>>>>>>> 7e44b09 (Add real Unity project for CI pipeline)
