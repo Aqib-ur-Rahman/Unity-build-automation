@@ -33,8 +33,8 @@ jobs:
       - name: Decode Android keystore
         shell: bash
         run: |
-          mkdir -p .ci
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > .ci/android.keystore
+          mkdir -p "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore"
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
 
       - name: Build APK
         uses: game-ci/unity-builder@v4
@@ -47,7 +47,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
           androidExportType: androidPackage
-          androidKeystoreName: .ci/android.keystore
+          androidKeystoreName: UserSettings/ci-keystore/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
@@ -76,7 +76,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
           androidExportType: androidAppBundle
-          androidKeystoreName: .ci/android.keystore
+          androidKeystoreName: UserSettings/ci-keystore/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
@@ -165,4 +165,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          rm -f .ci/android.keystore
+          rm -f "${{ env.PROJECT_PATH }}/UserSettings/ci-keystore/android.keystore"
