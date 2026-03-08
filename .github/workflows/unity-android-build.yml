@@ -44,6 +44,7 @@ jobs:
           unityVersion: ${{ env.UNITY_VERSION }}
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
+          versioning: None
           androidExportType: androidPackage
           androidKeystoreName: UserSettings/ci-keystore/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
@@ -62,6 +63,7 @@ jobs:
           unityVersion: ${{ env.UNITY_VERSION }}
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: Android
+          versioning: None
           androidExportType: androidAppBundle
           androidKeystoreName: UserSettings/ci-keystore/android.keystore
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
