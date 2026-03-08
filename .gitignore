@@ -14,3 +14,7 @@ UserSettings/
 # macOS
 .DS_Store
 unity-project/UserSettings/ci-keystore/
+Builds/
+unity-project/ProjectSettings/BurstAotSettings_Android.json
+unity-project/ProjectSettings/CommonBurstAotSettings.json
+unity-project/UserSettings/ci-keystore/
