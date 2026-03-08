@@ -51,7 +51,7 @@ jobs:
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
           buildsPath: ${{ env.BUILD_DIR }}/APK
-          customParameters: -batchmode -nographics
+          customParameters: -nographics
 
       - name: Rename APK output
         shell: bash
@@ -80,7 +80,7 @@ jobs:
           androidKeyaliasName: ${{ secrets.ANDROID_KEY_ALIAS }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEY_ALIAS_PASS }}
           buildsPath: ${{ env.BUILD_DIR }}/AAB
-          customParameters: -batchmode -nographics
+          customParameters: -nographics
 
       - name: Rename AAB output
         shell: bash
