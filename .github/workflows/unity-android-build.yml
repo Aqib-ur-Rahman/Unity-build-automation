@@ -87,26 +87,33 @@ jobs:
           if-no-files-found: error
 
       - name: Send Slack notification
-        if: success()
+        if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           COMMIT: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
         shell: bash
         run: |
           SHORT_SHA=$(echo "$COMMIT" | cut -c1-7)
 
+          if [ "$JOB_STATUS" = "success" ]; then
+            STATUS_TEXT="SUCCESS"
+          else
+            STATUS_TEXT="FAILED"
+          fi
+
           payload=$(cat <<EOF
           {
-            "text": "Unity Android build succeeded",
+            "text": "Unity Android pipeline $STATUS_TEXT",
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Unity Android Build Successful*"
+                  "text": "*Unity Android Pipeline:* $STATUS_TEXT"
                 }
               },
               {
@@ -126,7 +133,7 @@ jobs:
                   },
                   {
                     "type": "mrkdwn",
-                    "text": "*Artifacts / Run:*\n$RUN_URL"
+                    "text": "*Run URL:*\n$RUN_URL"
                   }
                 ]
               }
